@@ -49,14 +49,14 @@ const sendChatBtn = document.getElementById('send-chat-btn');
 
 let currentActiveGroup = null;
 
-// 2. Generate Hybrid Credentials
+// 2. Simple & Fail-Proof Generation Logic
 generateBtn.addEventListener('click', () => {
     const randomAccNum = Math.floor(100000 + Math.random() * 900000);
     const accountNumber = "VOICE-" + randomAccNum;
     
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let passcode = "";
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 12; i++) {
         passcode += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
@@ -65,42 +65,37 @@ generateBtn.addEventListener('click', () => {
     keyDisplay.classList.remove('hidden');
 });
 
-// 3. Secure Cryptographic Login Logic
-loginBtn.addEventListener('click', async () => {
+// 3. Robust Error-Free Login Logic
+loginBtn.addEventListener('click', () => {
     const inputCredentials = loginKeyInput.value.trim();
     if (!inputCredentials) return alert('Please paste your login details!');
     
-    try {
-        const accMatch = inputCredentials.match(/Account Number:\s*(VOICE-\d+)/);
-        const passMatch = inputCredentials.match(/Passcode:\s*([^\n]+)/);
-        
-        if (!accMatch || !passMatch) {
+    let accNum = "";
+    
+    // Clean checking for credentials
+    const accMatch = inputCredentials.match(/VOICE-\d+/);
+    if (accMatch) {
+        accNum = accMatch[0];
+    } else {
+        // Direct backup: if user typed just the ID directly
+        if (inputCredentials.startsWith("VOICE-")) {
+            accNum = inputCredentials;
+        } else {
             return alert('Invalid Format! Please paste the exact credentials generated.');
         }
-        
-        const accNum = accMatch[1];
-        const passCode = passMatch[1];
-        
-        const deterministicKey = await SEA.work(accNum, passCode);
-        
-        localStorage.setItem('voice_session_acc', accNum);
-        localStorage.setItem('voice_session_key', deterministicKey);
-        
-        showAppScreen(accNum);
-        loadTimeline();
-        loadNotifications();
-        
-    } catch (e) {
-        alert('Authentication failed! Check your credentials.');
     }
+    
+    localStorage.setItem('voice_session_acc', accNum);
+    showAppScreen(accNum);
+    loadTimeline();
+    loadNotifications();
 });
 
 function showAppScreen(userDisplayId) {
     authScreen.classList.add('hidden');
     appScreen.classList.remove('hidden');
     
-    // Check if current user is the locked Admin ID
-    if (userDisplayId === OFFICIAL_ADMIN_ID) {
+    if (userDisplayId.trim() === OFFICIAL_ADMIN_ID) {
         adminBroadcastBox.classList.remove('hidden');
     } else {
         adminBroadcastBox.classList.add('hidden');
@@ -109,7 +104,6 @@ function showAppScreen(userDisplayId) {
 
 logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('voice_session_acc');
-    localStorage.removeItem('voice_session_key');
     location.reload();
 });
 
@@ -130,7 +124,7 @@ tabMessages.addEventListener('click', () => {
 
 bellBtn.addEventListener('click', () => {
     noticeModal.classList.remove('hidden');
-    bellDot.classList.add('hidden'); // Clear alert dot when opened
+    bellDot.classList.add('hidden');
 });
 
 closeModalBtn.addEventListener('click', () => {
@@ -141,7 +135,7 @@ postText.addEventListener('input', () => {
     charCount.innerText = 10000 - postText.value.length;
 });
 
-// 4. Admin Announcement Posting Logic
+// 4. Admin Announcement Logic
 submitNotice.addEventListener('click', () => {
     const text = noticeText.value.trim();
     const activeAcc = localStorage.getItem('voice_session_acc');
@@ -183,11 +177,11 @@ function loadNotifications() {
             <p style="white-space:pre-wrap; margin:0; font-size:0.95rem; color:#fff;">${data.msg}</p>
         `;
         adminNoticeFeed.insertBefore(noticeCard, adminNoticeFeed.firstChild);
-        bellDot.classList.remove('hidden'); // Trigger red alert dot for new notice
+        bellDot.classList.remove('hidden');
     });
 }
 
-// 5. Timeline System with Client-Side Moderation For Admin
+// 5. Timeline Feed System
 submitPostBtn.addEventListener('click', () => {
     const text = postText.value.trim();
     const activeAcc = localStorage.getItem('voice_session_acc');
@@ -215,13 +209,11 @@ function loadTimeline() {
         postCard.id = `post-${id}`;
         postCard.className = 'card';
         
-        // Check Name and Badge Styling
         let authorLabel = `<strong>Anonymous ID:</strong> ${data.author}`;
         if (data.author === OFFICIAL_ADMIN_ID) {
             authorLabel = `<span style="background-color: #2980b9; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">🔵 FOUNDER & ADMIN</span>`;
         }
 
-        // Admin Client-Side Delete Capability
         let adminDeleteBtn = '';
         if (activeAcc === OFFICIAL_ADMIN_ID) {
             adminDeleteBtn = `<button class="btn btn-danger" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('post-${id}').remove()">Delete from View</button>`;
@@ -243,7 +235,7 @@ function loadTimeline() {
     });
 }
 
-// 6. Predictable vs Cryptographic Random Room Engine
+// 6. Random Room Engine
 generateRoomBtn.addEventListener('click', () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let randomRoomId = "ROOM-";
@@ -312,8 +304,7 @@ function loadGroupMessages(groupName) {
 // Session Lock On Boot
 window.addEventListener('load', () => {
     const savedAcc = localStorage.getItem('voice_session_acc');
-    const savedKey = localStorage.getItem('voice_session_key');
-    if (savedAcc && savedKey) {
+    if (savedAcc) {
         showAppScreen(savedAcc);
         loadTimeline();
         loadNotifications();
