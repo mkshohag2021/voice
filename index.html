@@ -7,7 +7,6 @@
     <title>VOICE - Decentralized Network</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <style>
         body { background-color: #0b0f17; color: #c9d1d9; }
         .hidden { display: none; }
@@ -15,7 +14,7 @@
 </head>
 <body class="font-sans antialiased">
 
-    <div id="global-notice-bar" class="hidden bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2..5 text-center text-xs font-bold shadow-md animate-pulse sticky top-0 z-50 flex justify-between items-center">
+    <div id="global-notice-bar" class="hidden bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2.5 text-center text-xs font-bold shadow-md animate-pulse sticky top-0 z-50 flex justify-between items-center">
         <span class="mx-auto" id="notice-text">📢 নতুন নীতিমালা বা নোটিশ এখানে দেখাবে...</span>
         <button onclick="document.getElementById('global-notice-bar').classList.add('hidden')" class="text-white hover:text-gray-200 font-bold px-2">✕</button>
     </div>
@@ -23,24 +22,37 @@
     <div id="auth-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div class="bg-[#121620] p-8 rounded-xl shadow-2xl border border-[#222735] w-full max-w-md text-center">
             <h1 class="text-3xl font-extrabold text-cyan-500 mb-2 tracking-wide">VOICE</h1>
-            <p class="text-xs text-gray-400 mb-6">Decentralized & Anonymous Network</p>
+            <p class="text-xs text-gray-400 mb-6">Secure Anonymous Network</p>
             
-            <button id="btn-generate" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-lg mb-4 transition-all">
-                Generate Secure Private Key
+            <button id="btn-register-ui" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-lg mb-4 transition-all">
+                Create New Account (নতুন আইডি তৈরি)
             </button>
             
-            <div id="key-display" class="hidden p-3 bg-[#0b0f17] rounded-lg border border-dashed border-cyan-500/50 mb-4 text-xs font-mono break-all text-cyan-400 select-all cursor-pointer"></div>
+            <div id="credentials-display" class="hidden p-4 bg-[#0b0f17] rounded-lg border border-dashed border-cyan-500/50 mb-4 text-left space-y-2">
+                <p class="text-xs text-amber-400 font-bold text-center">⚠️ এই তথ্যগুলো সেভ করে রাখুন, পরে আর পাবেন না!</p>
+                <div class="text-xs">
+                    <span class="text-gray-400 block">User ID / Account Number:</span>
+                    <strong id="generated-uid" class="text-cyan-400 font-mono text-sm select-all cursor-pointer"></strong>
+                </div>
+                <div class="text-xs">
+                    <span class="text-gray-400 block">Random Unhackable Password:</span>
+                    <strong id="generated-pass" class="text-emerald-400 font-mono text-xs select-all cursor-pointer break-all"></strong>
+                </div>
+            </div>
             
             <div class="relative flex py-2 items-center my-4">
                 <div class="flex-grow border-t border-[#222735]"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-sm">OR LOGIN WITH PASSCODE</span>
+                <span class="flex-shrink mx-4 text-gray-500 text-sm">LOGIN ZONE</span>
                 <div class="flex-grow border-t border-[#222735]"></div>
             </div>
 
-            <input type="text" id="input-key" placeholder="Enter Your Private Key or Passcode Here..." class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg px-4 py-3 text-sm text-center font-mono mb-4 text-gray-200 focus:outline-none focus:border-cyan-500">
+            <div class="space-y-3 mb-4">
+                <input type="text" id="login-uid" placeholder="Enter 5-6 Digit Account Number (User ID)" class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg px-4 py-3 text-sm text-center font-mono text-gray-200 focus:outline-none focus:border-cyan-500">
+                <input type="password" id="login-pass" placeholder="Enter Your Strong Password" class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg px-4 py-3 text-sm text-center font-mono text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
             
             <button id="btn-login" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
-                Access Account
+                Log In & Connect
             </button>
         </div>
     </div>
@@ -50,8 +62,8 @@
         <div class="w-full md:w-80 bg-[#121620] border-r border-[#222735] flex flex-col p-4">
             <div class="p-4 bg-[#0b0f17] rounded-xl border border-[#222735] mb-4 flex items-center justify-between">
                 <div>
-                    <span class="text-[10px] text-gray-400 block mb-0.5">VOICE ENGINE SECURE 🟢</span>
-                    <div id="user-id-badge" class="text-xs font-mono text-cyan-400 break-all select-all cursor-pointer"></div>
+                    <span class="text-[10px] text-gray-400 block mb-0.5">VOICE NODE SECURE 🟢</span>
+                    <div id="user-id-badge" class="text-xs font-mono text-cyan-400 font-bold break-all"></div>
                 </div>
                 <button id="btn-logout" class="bg-red-900/30 hover:bg-red-900/60 text-red-400 border border-red-500/30 text-xs px-3 py-1.5 rounded-lg font-medium transition-all">Logout</button>
             </div>
@@ -98,11 +110,10 @@
             </div>
 
             <div id="section-personal" class="hidden flex-grow flex flex-col h-full p-4 overflow-y-auto space-y-4">
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] flex flex-col h-[280px]">
+                    <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] flex flex-col h-[320px]">
                         <h3 class="text-sm font-bold text-gray-200 mb-1">💬 Messenger Group Chat</h3>
-                        <p class="text-[11px] text-gray-400 mb-2">নেটওয়ার্কের সকল মেম্বারদের সাথে গ্রুপ চ্যাট করুন (No Media)</p>
+                        <p class="text-[11px] text-gray-400 mb-2">নেটওয়ার্কের সকলের সাথে গ্রুপ চ্যাট (No Media)</p>
                         <div id="group-chat-box" class="flex-grow overflow-y-auto p-2 bg-[#0b0f17] rounded-lg border border-[#222735] space-y-2 text-xs mb-2"></div>
                         <div class="flex gap-1.5">
                             <input type="text" id="group-msg-input" placeholder="গ্রুপে বার্তা লিখুন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-3 text-xs text-gray-200 focus:outline-none">
@@ -110,38 +121,35 @@
                         </div>
                     </div>
 
-                    <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] flex flex-col h-[280px]">
+                    <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] flex flex-col h-[320px]">
                         <h3 class="text-sm font-bold text-gray-200 mb-1">🔒 Private Connect Mesh</h3>
-                        <p class="text-[11px] text-gray-400 mb-2">নির্দিষ্ট আইডি দিয়ে এন্ড-টু-এন্ড পার্সোনাল চ্যাট করুন</p>
-                        
+                        <p class="text-[11px] text-gray-400 mb-2">বন্ধুর ৫-৬ সংখ্যার আইডি বসিয়ে সরাসরি ব্যক্তিগত চ্যাট করুন</p>
                         <div class="flex gap-1.5 mb-2">
-                            <input type="text" id="target-user-id" placeholder="বন্ধুর ID বা VOICE নাম্বার দিন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-2 py-1 text-[11px] font-mono text-cyan-400 focus:outline-none">
+                            <input type="text" id="target-user-id" placeholder="বন্ধুর Account ID দিন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-2 py-1 text-[11px] font-mono text-cyan-400 focus:outline-none">
                             <button onclick="startPersonalChat()" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap">কানেক্ট করুন</button>
                         </div>
-                        
                         <div id="personal-chat-box" class="flex-grow overflow-y-auto p-2 bg-[#0b0f17] rounded-lg border border-[#222735] space-y-2 text-xs mb-2">
-                            <div class="text-gray-600 text-center mt-8 italic text-[11px]">আইডি বসিয়ে কানেক্ট বাটনে চাপ দিন।</div>
+                            <div class="text-gray-600 text-center mt-12 italic text-[11px]">আইডি বসিয়ে কানেক্ট করুন।</div>
                         </div>
-                        
                         <div class="flex gap-1.5">
                             <input type="text" id="personal-msg-input" placeholder="গোপন মেসেজ লিখুন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-3 text-xs text-gray-200 focus:outline-none" disabled>
                             <button onclick="sendPersonalMessage()" id="btn-send-personal" class="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold opacity-50 cursor-not-allowed" disabled>পাঠান</button>
                         </div>
                     </div>
                 </div>
-
             </div>
 
         </div>
     </div>
 
     <script>
-        // 👑 HARDCODED CRITICAL CREDENTIAL MATRIX
-        const ADM_PASS = "#HwVIiO0h*gLSh0g"; 
-        const ADM_NUMB = "VOICE-691547";
+        // 👑 IMMUTABLE MASTER SECURITY CORE
+        const MASTER_ID = "691547";
+        const MASTER_PASS = "#HwVIiO0h*gLSh0g";
 
+        // Decentralized DB Hub
         const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://relay.peer.ooo/gun']);
-        let userPair = null;
+        
         let userIdString = "";
         let uploadedImagesBase64 = [];
         let currentActiveChatNode = null;
@@ -150,52 +158,81 @@
         const sections = { feed: document.getElementById('section-feed'), personal: document.getElementById('section-personal') };
         const tabs = { feed: document.getElementById('tab-feed'), personal: document.getElementById('tab-personal') };
 
-        // 10,000 Text Counter Real-time Event
+        // Realtime 10000 limit count tracker
         document.getElementById('post-text').addEventListener('input', function() {
-            const remaining = 10000 - this.value.length;
-            document.getElementById('char-counter').innerText = `${remaining} chars remaining`;
+            document.getElementById('char-counter').innerText = `${10000 - this.value.length} chars remaining`;
         });
 
-        // AUTH CONTROL ENGINE
-        document.getElementById('btn-generate').addEventListener('click', async () => {
-            const pair = await SEA.pair();
-            document.getElementById('key-display').innerText = btoa(JSON.stringify(pair));
-            document.getElementById('key-display').classList.remove('hidden');
-        });
+        // 🎲 RANDOM STRONG PASSWORD GENERATOR ENGINE (24 Chars Long)
+        function generateStrongPassword() {
+            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+=-[]{}|;:,.<>?";
+            let pass = "";
+            for (let i = 0; i < 24; i++) {
+                pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return pass;
+        }
 
-        document.getElementById('btn-login').addEventListener('click', async () => {
-            const userInp = document.getElementById('input-key').value.trim();
-            if(!userInp) return alert("দয়া করে প্রাইভেট কী অথবা পাসকোডটি ইনপুট দিন!");
+        // 🔢 5-6 DIGITS NUMERIC ID GENERATOR 
+        function generateNumericID() {
+            return Math.floor(100000 + Math.random() * 900000).toString(); // Always generates stable 6 digit number
+        }
+
+        // REGISTER HANDLER
+        document.getElementById('btn-register-ui').addEventListener('click', () => {
+            const newUid = generateNumericID();
+            const newPass = generateStrongPassword();
+
+            // Save immutable entry packet to GunDB ledger cluster
+            gun.get('voice_vault_users').get(newUid).put({ password: newPass });
+
+            // Display UI updates immediately
+            document.getElementById('generated-uid').innerText = newUid;
+            document.getElementById('generated-pass').innerText = newPass;
+            document.getElementById('credentials-display').classList.remove('hidden');
             
-            let isFounder = false;
+            alert("আপনার অ্যাকাউন্ট তৈরি হয়েছে! আইডি ও পাসওয়ার্ডটি কোথাও নোট করে রাখুন।");
+        });
 
-            if(userInp === ADM_PASS || userInp === ADM_NUMB) {
-                isFounder = true;
-                userIdString = ADM_NUMB; // Set fixed Account ID
+        // VALIDATION & LOGIN GATEWAY
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const uidInp = document.getElementById('login-uid').value.trim();
+            const passInp = document.getElementById('login-pass').value.trim();
+
+            if(!uidInp || !passInp) return alert("আইডি এবং পাসওয়ার্ড দুটিই পূরণ করুন!");
+
+            // 👑 CHECK FOR SYSTEM FOUNDER PRIVILEGES DIRECT MATCH
+            if(uidInp === MASTER_ID && passInp === MASTER_PASS) {
+                executeLoginSession(MASTER_ID, true);
+                return;
             }
 
-            try {
-                if(!isFounder) {
-                    userPair = JSON.parse(atob(userInp));
-                    userIdString = "VOICE-" + userPair.pub.substring(0, 8).toUpperCase();
+            // Standard decentral verification node check
+            gun.get('voice_vault_users').get(uidInp).once((data) => {
+                if(data && data.password === passInp) {
+                    executeLoginSession(uidInp, false);
+                } else {
+                    alert("ভুল ইউজার আইডি অথবা পাসওয়ার্ড! আবার চেষ্টা করুন।");
                 }
-                
-                document.getElementById('user-id-badge').innerText = userIdString;
-                screens.auth.classList.add('hidden');
-                screens.main.classList.remove('hidden');
-                
-                // 👑 Trigger Admin Broadcast UI directly if Founder logs in
-                if(isFounder) {
-                    document.getElementById('admin-broadcast-box').classList.remove('hidden');
-                }
-
-                initStreams();
-            } catch(e) { alert("ভুল চাবি বা পাসকোড! আবার চেষ্টা করুন।"); }
+            });
         });
+
+        function executeLoginSession(uid, isAdmin) {
+            userIdString = uid;
+            document.getElementById('user-id-badge').innerText = "ID: " + userIdString;
+            
+            screens.auth.classList.add('hidden');
+            screens.main.classList.remove('hidden');
+
+            if(isAdmin) {
+                document.getElementById('admin-broadcast-box').classList.remove('hidden');
+            }
+            initStreams();
+        }
 
         document.getElementById('btn-logout').addEventListener('click', () => { location.reload(); });
 
-        // IMAGE PACKER PROCESSOR (Strictly 1 to 3 images allowed)
+        // IMAGE FILE PROCESSOR
         function handleImageSelection(input) {
             uploadedImagesBase64 = [];
             const files = Array.from(input.files).slice(0, 3);
@@ -216,7 +253,7 @@
             });
         }
 
-        // NAVIGATION ROUTER
+        // TABS MANAGER
         function switchTab(target) {
             Object.keys(sections).forEach(k => sections[k].classList.add('hidden'));
             Object.keys(tabs).forEach(k => tabs[k].className = "w-full text-left px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-[#1c2130]");
@@ -225,9 +262,9 @@
             tabs[target].className = "w-full text-left px-4 py-3 rounded-lg font-medium text-sm bg-cyan-600/20 text-cyan-400 border border-cyan-500/30";
         }
 
-        // DECENTRALIZED SYNC ROUTERS
+        // GUN DB BROKERS DATA FLOW
         function initStreams() {
-            // Live Global Push Notifications
+            // Live broadcast channel
             gun.get('voice_global_admin_notice').on((data) => {
                 const noticeBar = document.getElementById('global-notice-bar');
                 if(data && data.text) {
@@ -238,12 +275,12 @@
                 }
             });
 
-            // Posts Flow Synchronization
+            // Stream Feed Posts
             gun.get('voice_global_posts').map().on((data, id) => {
                 if(!data || document.getElementById(`post-${id}`)) return;
                 const card = document.createElement('div');
                 card.id = `post-${id}`;
-                card.className = "bg-[#121620] p-5 rounded-xl border border-[#222735] space-y-3 shadow-sm text-left";
+                card.className = "bg-[#121620] p-5 rounded-xl border border-[#222735] space-y-3 text-left shadow-sm";
                 
                 let imgHtml = "";
                 if(data.images) {
@@ -259,7 +296,7 @@
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center text-[11px] text-gray-500">
-                        <span class="font-mono text-cyan-400 font-bold">${data.sender}</span>
+                        <span class="font-mono text-cyan-400 font-bold">👤 ID: ${data.sender}</span>
                         <span>${new Date(data.time).toLocaleString()}</span>
                     </div>
                     <p class="text-sm text-gray-200 whitespace-pre-wrap break-all leading-relaxed">${escapeHtml(data.text)}</p>
@@ -269,19 +306,19 @@
                 container.insertBefore(card, container.firstChild);
             });
 
-            // Universal Group Live Chat Stream
+            // Group Messages Stream
             gun.get('voice_messenger_group').map().on((data, id) => {
                 if(!data || document.getElementById(`gmsg-${id}`)) return;
                 const bubble = document.createElement('div');
                 bubble.id = `gmsg-${id}`;
                 bubble.className = `p-2 rounded-lg max-w-[85%] text-left ${data.senderId === userIdString ? 'bg-cyan-600 text-slate-950 ml-auto' : 'bg-[#1c2130] text-gray-200'}`;
-                bubble.innerHTML = `<div class="text-[9px] opacity-60 font-mono">${data.senderId}</div><div class="break-all">${escapeHtml(data.msg)}</div>`;
+                bubble.innerHTML = `<div class="text-[9px] opacity-60 font-mono">ID: ${data.senderId}</div><div class="break-all">${escapeHtml(data.msg)}</div>`;
                 const box = document.getElementById('group-chat-box');
                 box.appendChild(bubble); box.scrollTop = box.scrollHeight;
             });
         }
 
-        // INTERACTION ACTUATORS
+        // INTERACTION COMPONENT HANDLERS
         function publishPost() {
             const txt = document.getElementById('post-text').value.trim();
             if(!txt && uploadedImagesBase64.length === 0) return alert("ফাঁকা পোস্ট সাবমিট করা সম্ভব নয়!");
@@ -302,11 +339,11 @@
             inp.value = "";
         }
 
-        // TARGETED ONE-TO-ONE DIRECT MESSAGING ENDPOINT
+        // ONE TO ONE SECURE ENGINE BY ID
         function startPersonalChat() {
-            const targetId = document.getElementById('target-user-id').value.trim().toUpperCase();
-            if(!targetId || targetId.length < 5) return alert("সঠিক মেম্বার আইডি বা ভলিয়ম নাম্বার ইনপুট দিন!");
-            if(targetId === userIdString) return alert("নিজের আইডিতে টেস্ট মেসেজ পাঠানো যাবে না!");
+            const targetId = document.getElementById('target-user-id').value.trim();
+            if(!targetId || targetId.length < 5) return alert("সঠিক ৫-৬ সংখ্যার মেম্বার আইডি দিন!");
+            if(targetId === userIdString) return alert("নিজের আইডিতে মেসেজ পাঠানো যাবে না!");
 
             const secureChannelToken = [userIdString, targetId].sort().join('_room_');
             
@@ -330,7 +367,7 @@
 
         function sendPersonalMessage() {
             const inp = document.getElementById('personal-msg-input');
-            const targetId = document.getElementById('target-user-id').value.trim().toUpperCase();
+            const targetId = document.getElementById('target-user-id').value.trim();
             if(!inp.value.trim() || !targetId) return;
             
             const secureChannelToken = [userIdString, targetId].sort().join('_room_');
@@ -338,18 +375,18 @@
             inp.value = "";
         }
 
-        // 👑 FOUNDER TELEMETRY BROADCAST ENGINE
+        // FOUNDER BROADCAST PUSH ACTION
         function publishGlobalNotice() {
             const noticeTxt = document.getElementById('admin-notice-input').value.trim();
             if(!noticeTxt) return alert("নোটিশের টেক্সট বক্সটি সম্পূর্ণ খালি!");
             gun.get('voice_global_admin_notice').put({ text: noticeTxt });
-            alert("আপনার পুশ নোটিফিকেশন সাকসেসফুলি রিয়েল-টাইমে ব্রডকাস্ট হয়েছে!");
+            alert("আপনার পুশ নোটিফিকেশন রিয়েল-টাইমে ব্রডকাস্ট হয়েছে!");
             document.getElementById('admin-notice-input').value = "";
         }
 
         function clearGlobalNotice() {
             gun.get('voice_global_admin_notice').put({ text: "" });
-            alert("গ্লোবাল নোটিশ বোর্ডটি সফলভাবে ক্লিন করা হয়েছে।");
+            alert("গ্লোবাল নোটিশ বোর্ডটি ক্লিন করা হয়েছে।");
         }
 
         function escapeHtml(text) {
@@ -358,3 +395,4 @@
     </script>
 </body>
 </html>
+
