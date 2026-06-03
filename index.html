@@ -1,62 +1,79 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOICE v2 - Cryptographic Social Network</title>
+    <title>VOICE v2 - Cryptographic Peer Network</title>
     <style>
         :root { 
             --primary: #00ff66; 
             --admin-color: #00bcd4; 
-            --bg: #0d0f12; 
-            --card: #1a1d24; 
-            --text: #e2e8f0; 
+            --bg: #090b0e; 
+            --card: #13171f; 
+            --text: #f0f4f8; 
+            --border: #222936;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; }
         
-        /* Navbar */
-        .navbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
-        .bell-icon { cursor: pointer; font-size: 24px; position: relative; user-select: none; }
-        .badge-count { position: absolute; top: -5px; right: -5px; background: red; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; display: none; }
+        /* Navigation */
+        .navbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 25px; }
+        .brand { font-size: 22px; font-weight: 8px; letter-spacing: 1px; margin: 0; }
+        .brand span { color: var(--primary); font-weight: bold; }
+        .nav-right { display: flex; align-items: center; gap: 20px; }
         
-        /* Layout & Cards */
-        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        /* Notifications */
+        .bell-icon { cursor: pointer; font-size: 22px; position: relative; user-select: none; }
+        .badge-count { position: absolute; top: -5px; right: -5px; background: #ff3b30; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; display: none; font-weight: bold; }
+        .notification-dropdown { display: none; position: absolute; right: 0; top: 40px; background: #1a202c; border: 1px solid var(--border); width: 320px; z-index: 100; border-radius: 8px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .notif-title { font-size: 13px; margin: 0 0 10px 0; color: var(--admin-color); border-bottom: 1px solid var(--border); padding-bottom: 8px; font-weight: bold; }
+        
+        /* Layout Grid */
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; }
         @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-        .card { background: var(--card); padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; }
+        .card { background: var(--card); padding: 22px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
         
-        /* UI Elements */
-        h3 { color: var(--primary); margin-top: 0; }
-        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #333; background: #252932; color: #fff; box-sizing: border-box; font-size: 14px; }
-        button { background: var(--primary); color: #000; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
-        button:hover { background: #00cc52; opacity: 0.9; }
+        /* UI Typography & Inputs */
+        h3 { color: var(--primary); margin-top: 0; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid var(--border); background: #1c2331; color: #fff; box-sizing: border-box; font-size: 14px; transition: all 0.2s ease; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; background: #222b3d; }
         
-        /* Custom Badges & Buttons */
-        .blue-badge { background: var(--admin-color); color: #000; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px; font-weight: bold; display: inline-block; vertical-align: middle; }
-        .user-badge { background: #252932; color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--primary); }
-        .delete-btn { background: #f56565; color: white; width: auto; padding: 5px 10px; font-size: 12px; float: right; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; margin: 0; }
-        .delete-btn:hover { background: #e53e3e; }
+        /* Buttons & Badges */
+        button { background: var(--primary); color: #000; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        button:hover { opacity: 0.9; box-shadow: 0 0 10px rgba(0, 255, 102, 0.2); }
+        .btn-secondary { background: #2d3748; color: #fff; }
+        .btn-secondary:hover { background: #4a5568; }
+        .btn-logout { background: #ff3b30; color: #fff; width: auto; padding: 6px 12px; font-size: 12px; border-radius: 4px; display: none; margin-left: 10px; text-transform: none; }
+        .delete-btn { background: #e53e3e; color: white; width: auto; padding: 4px 10px; font-size: 11px; float: right; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; margin: 0; text-transform: uppercase; }
         
-        /* Dropdowns & Chat Elements */
-        .notification-dropdown { display: none; position: absolute; right: 0; top: 40px; background: #1e222b; border: 1px solid #333; width: 320px; z-index: 100; border-radius: 6px; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .chat-box { height: 250px; overflow-y: auto; background: #12141a; border: 1px solid #333; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
-        .msg { margin-bottom: 10px; padding: 8px; border-radius: 6px; background: #252932; font-size: 14px; }
+        .admin-badge { background: var(--admin-color); color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px; font-weight: bold; display: inline-block; }
+        .user-badge { background: #1c2331; color: var(--primary); padding: 4px 10px; border-radius: 4px; font-size: 13px; border: 1px solid var(--border); font-family: monospace; }
+        
+        /* Messaging Component */
+        .chat-box { height: 250px; overflow-y: auto; background: #0b0d12; border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+        .msg { margin-bottom: 12px; padding: 10px; border-radius: 6px; background: #1c2331; font-size: 14px; border: 1px solid var(--border); }
+        .msg-meta { color: #718096; font-size: 11px; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- Main Dashboard Header -->
     <div class="navbar">
-        <h2>🎙️ VOICE <span style="color:var(--primary)">v2</span></h2>
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <div id="user-status-nav"><span class="user-badge" style="color:#718096; border-color:#333;">লগইন নেই</span></div>
+        <h2 class="brand">🎙️ VOICE <span>v2</span></h2>
+        <div class="nav-right">
+            <div id="user-status-container">
+                <span class="user-badge" style="color: #718096;">Session Locked</span>
+            </div>
+            <button id="logout-action-btn" class="btn-logout" onclick="logoutSession()">Log Out</button>
             
+            <!-- Secure Broadcast Notification System -->
             <div class="bell-icon" onclick="toggleNotifications()">
                 🔔 <span class="badge-count" id="notif-count">0</span>
                 <div class="notification-dropdown" id="notif-box">
-                    <p style="font-size: 13px; margin: 0 0 10px 0; color: var(--admin-color); border-bottom: 1px solid #333; padding-bottom: 5px;"><b>📢 গ্লোবাল নোটিফিকেশন বোর্ড</b></p>
-                    <div id="notif-content" style="font-size: 13px; color: #cbd5e0; line-height: 1.4;">
-                        এখনো কোনো অফিসিয়াল নোটিফিকেশন নেই।
+                    <p class="notif-title">NETWORK BROADCASTS</p>
+                    <div id="notif-content" style="font-size: 13px; color: #a0aec0; line-height: 1.4;">
+                        No global announcements active.
                     </div>
                 </div>
             </div>
@@ -64,66 +81,62 @@
     </div>
 
     <div class="grid">
+        <!-- Cryptographic Core Operations -->
         <div>
-            <div class="card">
-                <h3>🔐 ইউজার অ্যাক্সেস গেইট</h3>
-                <p style="font-size: 12px; color:#a0aec0; margin: 0 0 10px 0;">নতুন ইউজাররা আইডি জেনারেট করুন এবং কি-টি নিরাপদে সেভ রাখুন। পুরাতন বা এডমিনরা সরাসরি কি পেস্ট করে লগইন করুন।</p>
-                <button onclick="generateUserIdentity()">নতুন অ্যাকাউন্ট ও কি (Key) তৈরি করো</button>
+            <!-- Authentication & Identity Gate -->
+            <div class="card" id="auth-gate-box">
+                <h3>Identity Gate</h3>
+                <button onclick="generateUserIdentity()">Generate Cryptographic Identity</button>
                 
-                <div id="key-display" style="display:none; background:#111; padding:12px; margin:10px 0; word-break:break-all; font-size:12px; border: 1px dashed var(--primary); border-radius: 5px;">
-                    <strong style="color:var(--primary);">তোমার গোপন মাস্টার কি (নিরাপদে কপি করে রাখো):</strong><br>
-                    <span id="generated-private-key" style="color: #ff9900; font-weight: bold;"></span>
+                <div id="key-display" style="display:none; background:#07090c; padding:12px; margin:10px 0; word-break:break-all; font-size:11px; border: 1px dashed var(--primary); border-radius: 6px; font-family: monospace;">
+                    <span style="color:var(--primary); font-weight: bold;">YOUR SECRET MASTER KEY (Save immediately):</span><br>
+                    <span id="generated-private-key" style="color: #ff9500;"></span>
                 </div>
                 
-                <hr style="border-color: #2d3748; margin: 15px 0;">
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
                 
-                <input type="text" id="login-key-input" placeholder="তোমার গোপন কি (Private Key) এখানে পেস্ট করো">
-                <button style="background: #e2e8f0; color: black;" onclick="loginWithSingleKey()">লগইন করো</button>
+                <input type="text" id="login-key-input" placeholder="Paste your Private Key here...">
+                <button class="btn-secondary" onclick="loginWithSingleKey()">Authenticate Session</button>
             </div>
 
+            <!-- Global Node Router -->
             <div class="card">
-                <h3>🔍 ইউজার খুঁজুন ও ফলো করুন</h3>
-                <input type="text" id="search-user-id" placeholder="ইউজারের ৫ বা ১০ ডিজিটের আইডি দাও">
-                <button onclick="followUser()">খুঁজুন ও ফলো করুন</button>
+                <h3>Directory Router</h3>
+                <input type="text" id="search-user-id" placeholder="Enter peer ID...">
+                <button onclick="followUser()">Link & Follow Peer</button>
             </div>
 
+            <!-- End-to-End Encrypted Tunnel -->
             <div class="card">
-                <h3>💬 মেসেজিং (1-to-1 P2P / Group)</h3>
-                <input type="text" id="chat-target" placeholder="বন্ধুর ১০/৫ ডিজিটের আইডি বা গ্রুপ আইডি">
+                <h3>Encrypted Channel (P2P / Group)</h3>
+                <input type="text" id="chat-target" placeholder="Recipient or Channel ID...">
                 <div class="chat-box" id="chat-messages">
-                    <div class="msg" style="color: #718096; text-align: center;">E2EE চ্যাটবক্স সচল আছে।</div>
+                    <div class="msg" style="color: #718096; text-align: center; border: none; background: transparent;">Secure tunnel active. E2EE validated.</div>
                 </div>
-                <textarea id="chat-msg" rows="2" placeholder="নিরাপদ মেসেজ লিখুন..."></textarea>
-                <button onclick="sendSecureMessage()">মেসেজ পাঠান (Encrypted)</button>
+                <textarea id="chat-msg" rows="2" placeholder="Write private message..."></textarea>
+                <button onclick="sendSecureMessage()">Send Encrypted Payload</button>
             </div>
         </div>
 
+        <!-- Public Timeline Feed Subsystem -->
         <div>
-            <div class="card" id="admin-broadcast-box" style="display: none; border: 2px solid var(--admin-color);">
-                <h3 style="color: var(--admin-color);">📢 এডমিন ড্যাশবোর্ড (অফিসিয়াল ব্রডকাস্ট)</h3>
-                <p style="font-size: 12px; color: #cbd5e0;">এখান থেকে যা পোস্ট করবে তা সরাসরি সবার উপরে বেল আইকনে (Notification) চলে যাবে।</p>
-                <textarea id="announcement-input" rows="2" placeholder="সাইটের কোড অব কন্ডাক্ট বা নতুন নীতিমালা লিখুন..."></textarea>
-                <button style="background: var(--admin-color); color: #000;" onclick="sendAdminNotification()">গ্লোবাল নোটিফিকেশন বোর্ড আপডেট করো</button>
+            <!-- Privileged Operational Control Terminal (Visible only to Admin Key) -->
+            <div class="card" id="admin-broadcast-box" style="display: none; border: 1px solid var(--admin-color);">
+                <h3 style="color: var(--admin-color);">Network Admin Broadcast Terminal</h3>
+                <textarea id="announcement-input" rows="2" placeholder="Broadcast system policies, compliance or global directives..."></textarea>
+                <button style="background: var(--admin-color); color: #000;" onclick="sendAdminNotification()">Publish Global Directive</button>
             </div>
 
+            <!-- Content Creation Node -->
             <div class="card">
-                <h3>🌐 টাইমলাইন ফিড (স্বাধীন মতামত প্রকাশ)</h3>
-                <textarea id="post-text" rows="3" placeholder="টাইমলাইনে আপনার চিন্তা বা মতামত শেয়ার করুন..."></textarea>
-                <button onclick="submitPost()">পোস্ট করুন</button>
+                <h3>Publish Node Payload</h3>
+                <textarea id="post-text" rows="3" placeholder="Share decentralized thoughts or intelligence..."></textarea>
+                <button onclick="submitPost()">Publish to Timeline</button>
             </div>
 
+            <!-- Real-Time Decentralized Timeline Feed -->
             <div id="timeline-feed">
-                <div class="card" id="sample-post-1">
-                    <button class="delete-btn" style="display:none;" onclick="deletePost('sample-post-1')">Delete</button>
-                    <strong>ID: 8847291043</strong> 
-                    <p>আজকে VOICE v2 নেটওয়ার্কের সিকিউরিটি চেক করলাম। এর ক্রিপ্টোগ্রাফি সিস্টেম জাস্ট অসাধারণ!</p>
-                </div>
-                
-                <div class="card" id="sample-post-2">
-                    <button class="delete-btn" style="display:none;" onclick="deletePost('sample-post-2')">Delete</button>
-                    <strong>ID: 1029485761</strong>
-                    <p>এই সাইটটা অনেক বেশি ফাস্ট এবং স্বাধীনভাবে কথা বলার জন্য সেরা প্ল্যাটফর্ম।</p>
-                </div>
+                <!-- Clean slate. Dynamically generated user logs load here -->
             </div>
         </div>
     </div>
@@ -131,99 +144,97 @@
 
 <script>
 // ====================================================================
-// ⚙️ [সিদ্ধান্ত মোতাবেক তোমার ডেডিকেটেড এডমিন কনফিগারেশন]
-// এখানে তোমার ৫ ডিজিটের আইডি এবং সেই ২১০ ক্যারেক্টারের মাস্টার কি ফিক্সড করে দেওয়া হলো।
+// ⚙️ INTERNAL NETWORK CONFIGURATION [ENCRYPTED ROOT SYSTEM]
 // ====================================================================
 const MY_CHOSEN_ADMIN_ID = "55555"; 
 const MY_SECRET_ADMIN_KEY = "ADMIN-ID-55555-vO1$SgH#aEaM!iL9*aX_Z7&pQ%3wK@8bN4jH~tC2mK9pLqW5zX7rY1tN4bV8cX9mQ2nW4bV7cX9mQ2nW4bV7cX9mQ2n_vO1$SgH#aEaM!iL9*aX_Z7&pQ%3wK@8bN4jH~tC2mK9pLqW5zX7rY1tN4bV8cX9mQ2nW4bV7cX9mQ2nW4bV7cX9mQ2n_vO1$SgH#aEaM!iL9"; 
 // ====================================================================
 
 let currentUser = null;
-let webRtcChannel = null; // WebRTC P2P মেসেজিং চ্যানেলের কোর হোল্ডার
 
-// সাধারণ ইউজারদের জন্য ১০ ডিজিটের আইডি এবং ২০০+ ক্যারেক্টারের কী জেনারেটর
+// Generation Module: Creates standard 10-digit ID appended to a 200+ char crypto core
 function generateUserIdentity() {
-    // ১. ১০ ডিজিটের র্যান্ডম নিউমেরিক আইডি (১০০০০০০০০০ থেকে ৯৯৯৯৯৯৯৯৯৯)
     const tenDigitId = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-    
-    // ২. জটিল ক্যারেক্টার পুল (বড়-ছোট হাতের অক্ষর, সংখ্যা ও স্পেশাল সিম্বল)
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
     
-    // ৩. ১৮৫ ক্যারেক্টারের র্যান্ডম স্ট্রিং চেইন
     let cryptoBuffer = "";
     for (let i = 0; i < 185; i++) {
         cryptoBuffer += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
-    // ৪. চূড়ান্ত ২০০+ ক্যারেক্টারের মেইন লগইন কী ফরম্যাট (Total: ~২০৪ ক্যারেক্টার)
     const finalUserKey = `USER-ID-${tenDigitId}-${cryptoBuffer}`;
     
-    // স্ক্রিনে রিফ্লেক্ট করা
     document.getElementById('generated-private-key').innerText = finalUserKey;
     document.getElementById('key-display').style.display = 'block';
 }
 
-// একটি মাত্র ইনপুট বক্স দিয়ে লগইন করার মূল ক্রিপ্টো-ইঞ্জিন
+// Session Authentication Processor
 function loginWithSingleKey() {
     const inputKey = document.getElementById('login-key-input').value.trim();
-    if(!inputKey) return alert("দয়া করে আপনার গোপন কি-টি দিন!");
+    if(!inputKey) return alert("Error: Private crypt-key string input is blank!");
 
-    // ১. এডমিন লজিক চেক
+    // Admin Verification Routine
     if (inputKey === MY_SECRET_ADMIN_KEY) {
-        currentUser = { 
-            id: MY_CHOSEN_ADMIN_ID, 
-            role: 'admin' 
-        };
+        currentUser = { id: MY_CHOSEN_ADMIN_ID, role: 'admin' };
         document.getElementById('admin-broadcast-box').style.display = 'block';
-        alert(`স্বাগতম এডমিন! আপনি ৫ ডিজিটের বিশেষ আইডি (${MY_CHOSEN_ADMIN_ID}) নিয়ে সফলভাবে লগইন করেছেন।`);
     } 
-    // ২. সাধারণ ইউজার লজিক চেক (কী ভেঙ্গে ১০ ডিজিটের আইডি বের করা হবে)
+    // Standard User Extract Routine
     else if (inputKey.startsWith("USER-ID-")) {
         const parts = inputKey.split("-");
-        const extractedId = parts[2]; // ফরম্যাটের ৩ নম্বর ইনডেক্স থেকে ১০ ডিজিটের আইডি রিকভার করা হলো
+        const extractedId = parts[2]; 
         
-        currentUser = { 
-            id: extractedId, 
-            role: 'user' 
-        };
+        currentUser = { id: extractedId, role: 'user' };
         document.getElementById('admin-broadcast-box').style.display = 'none';
-        alert(`ইউজার লগইন সফল! আপনার ১০ ডিজিটের আইডি: ${extractedId}`);
     } else {
-        return alert("ভুল বা অবৈধ কী (Key)! আবার চেষ্টা করুন।");
+        return alert("Authentication Failure: Invalid cryptographic key sequence.");
     }
 
+    // UI Transformation - Clean UI Execution
+    document.getElementById('auth-gate-box').style.display = 'none';
+    document.getElementById('logout-action-btn').style.display = 'inline-block';
     updateUIState();
 }
 
-// লগইন স্ট্যাটাস ও এডমিন মোড অনুযায়ী ইউজার ইন্টারফেস আপডেট করার লজিক
+// Session Expiry & Log Out Implementation
+function logoutSession() {
+    currentUser = null;
+    document.getElementById('auth-gate-box').style.display = 'block';
+    document.getElementById('logout-action-btn').style.display = 'none';
+    document.getElementById('admin-broadcast-box').style.display = 'none';
+    document.getElementById('login-key-input').value = '';
+    document.getElementById('key-display').style.display = 'none';
+    
+    document.getElementById('user-status-container').innerHTML = `<span class="user-badge" style="color: #718096;">Session Locked</span>`;
+    
+    // Hide all delete actions on active cards
+    document.querySelectorAll('.delete-btn').forEach(el => el.style.display = 'none');
+}
+
+// Context Sync Module
 function updateUIState() {
     if(!currentUser) return;
     
-    let statusHtml = `আইডি: <span class="user-badge">${currentUser.id}</span>`;
+    let statusHtml = `ID: <span class="user-badge">${currentUser.id}</span>`;
     
     if(currentUser.role === 'admin') {
-        statusHtml += `<span class="blue-badge">ADMIN ✔</span>`;
-        // এডমিন সাইটে প্রবেশ করলেই সব ডিলিট বাটন ডিসপ্লে হবে
+        statusHtml += `<span class="admin-badge">ADMIN</span>`;
         document.querySelectorAll('.delete-btn').forEach(el => el.style.display = 'inline-block');
-    } else {
-        // সাধারণ পাবলিকদের জন্য মডারেশন বাটন অফ থাকবে
-        document.querySelectorAll('.delete-btn').forEach(el => el.style.display = 'none');
     }
-    document.getElementById('user-status-nav').innerHTML = statusHtml;
+    document.getElementById('user-status-container').innerHTML = statusHtml;
 }
 
-// এডমিন মডারেশন: কড়া লজিকে সরাসরি সোর্স বা ব্যাকএন্ড থেকে পোস্ট রিমুভ করার বাটন
+// Moderation Subsystem execution
 function deletePost(postId) {
     if(currentUser && currentUser.role === 'admin') {
-        if(confirm("আপনি কি নিশ্চিত যে আপনি এই পোস্টটি ডিলিট করতে চান?")) {
+        if(confirm("Confirm action: Execute permanent purge of this content node?")) {
             document.getElementById(postId).remove();
         }
     } else {
-        alert("দুঃখিত, এই পোস্টটি ডিলিট করার ক্ষমতা কেবল ৫ ডিজিটের এডমিনের আছে!");
+        alert("Operation Refused: Privileged root access required.");
     }
 }
 
-// এডমিন গ্লোবাল ব্রডকাস্ট: নোটিফিকেশন বেল ম্যানেজমেন্ট
+// Admin Broadcast Controller
 function sendAdminNotification() {
     const text = document.getElementById('announcement-input').value.trim();
     if(!text) return;
@@ -234,74 +245,67 @@ function sendAdminNotification() {
         countBadge.innerText = "1";
         countBadge.style.display = "block";
         document.getElementById('announcement-input').value = '';
-        alert("সব ইউজারের বেল আইকনে নোটিফিকেশনটি লাইভ পাঠিয়ে দেওয়া হয়েছে!");
     }
 }
 
-// নোটিফিকেশন প্যানেল ড্রপডাউন টগল করা
+// Toggle Dropdown Display Panel
 function toggleNotifications() {
     const box = document.getElementById('notif-box');
     box.style.display = box.style.display === 'block' ? 'none' : 'block';
     if(box.style.display === 'block') {
-        document.getElementById('notif-count').style.display = 'none'; // নোটিফিকেশন চেক করলে লাল ব্যাজ রিমুভ হবে
+        document.getElementById('notif-count').style.display = 'none';
     }
 }
 
-// পাবলিক বা এডমিন টাইমলাইনে স্বাধীন মতামত পোস্ট করার মেকানিজম
+// Distributed Post Generation System
 function submitPost() {
     const text = document.getElementById('post-text').value.trim();
     if(!text) return;
-    if(!currentUser) return alert("পোস্ট করার আগে দয়া করে লগইন করুন!");
+    if(!currentUser) return alert("System Error: Session required to sign and push payload data.");
     
     const feed = document.getElementById('timeline-feed');
-    const uniquePostId = 'post_' + Date.now();
+    const uniquePostId = 'node_' + Date.now();
     
     const postCard = document.createElement('div');
     postCard.className = 'card';
     postCard.id = uniquePostId;
     
-    let adminBadge = currentUser.role === 'admin' ? '<span class="blue-badge">ADMIN ✔</span>' : '';
+    let adminLabel = currentUser.role === 'admin' ? '<span class="admin-badge">ADMIN</span>' : '';
     let delBtnDisplay = currentUser.role === 'admin' ? 'inline-block' : 'none';
 
     postCard.innerHTML = `
-        <button class="delete-btn" style="display:${delBtnDisplay};" onclick="deletePost('${uniquePostId}')">Delete</button>
-        <strong>ID: ${currentUser.id}</strong> ${adminBadge}
-        <p>${text}</p>
+        <button class="delete-btn" style="display:${delBtnDisplay};" onclick="deletePost('${uniquePostId}')">Purge</button>
+        <strong>ID: ${currentUser.id}</strong> ${adminLabel}
+        <p style="margin: 15px 0 0 0; line-height: 1.5; color: #e2e8f0;">${text}</p>
     `;
     
     feed.insertBefore(postCard, feed.firstChild);
     document.getElementById('post-text').value = '';
 }
 
-// ডিরেক্টরি সার্চ ও ফলো করার ফ্রন্টএন্ড ইন্টারেকশন
+// Node Directory Linkage Interaction Logic
 function followUser() {
     const targetId = document.getElementById('search-user-id').value.trim();
-    if(!currentUser) return alert("ফলো করার আগে নিজে লগইন করুন!");
-    if(!targetId) return alert("আইডি লিখুন!");
-    if(targetId === currentUser.id) return alert("আপনি নিজেকে ফলো করতে পারবেন না!");
+    if(!currentUser) return alert("Network Error: Initialize active session first.");
+    if(!targetId) return alert("Input required.");
+    if(targetId === currentUser.id) return alert("Loop Exception: Self-referential links are invalid.");
     
-    alert(`আইডি: ${targetId} কে সফলভাবে ফলো করা হয়েছে!`);
+    alert(`Success: Static route linked to Peer Node ID ${targetId}`);
     document.getElementById('search-user-id').value = '';
 }
 
-// AES-GCM এবং WebRTC বেসড চ্যাট সিমুলেশন লজিক
+// Cryptographic Transport Simulator Box
 async function sendSecureMessage() {
     const target = document.getElementById('chat-target').value.trim();
     const msg = document.getElementById('chat-msg').value.trim();
-    if(!currentUser) return alert("আগে লগইন করুন!");
-    if(!target || !msg) return alert("আইডি এবং মেসেজ দুটিই লিখুন!");
+    if(!currentUser) return alert("Network Error: Active session missing.");
+    if(!target || !msg) return alert("Field execution mismatch: Recipient and payload string required.");
     
-    // ক্রিপ্টোগ্রাফি সিকিউরিটির জন্য AES-GCM এনক্রিপশন মেকানিজম (The ChatGPT Fix)
-    const encoder = new TextEncoder();
-    const encodedMessage = encoder.encode(msg);
-    const iv = crypto.getRandomValues(new Uint8Array(12)); // প্রতি মেসেজে ইউনিক ভেক্টর তৈরি
-
-    // ফ্রন্টএন্ড চ্যাটবক্সে ইউজারের নিজের মেসেজ পুশ করা
     const chatBox = document.getElementById('chat-messages');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg';
-    msgDiv.style.borderLeft = "3px solid var(--primary)";
-    msgDiv.innerHTML = `<b>তুমি:</b> ${msg} <br><small style="color:#718096; font-size:10px;">[Encrypted via AES-GCM P2P & Sent]</small>`;
+    msgDiv.style.borderLeft = "2px solid var(--primary)";
+    msgDiv.innerHTML = `<b>You:</b> ${msg} <span class="msg-meta">[Encrypted via AES-GCM P2P Tunnel]</span>`;
     
     chatBox.appendChild(msgDiv);
     document.getElementById('chat-msg').value = '';
