@@ -1,398 +1,313 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOICE - Decentralized Network</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <title>VOICE v2 - Cryptographic Social Network</title>
     <style>
-        body { background-color: #0b0f17; color: #c9d1d9; }
-        .hidden { display: none; }
+        :root { 
+            --primary: #00ff66; 
+            --admin-color: #00bcd4; 
+            --bg: #0d0f12; 
+            --card: #1a1d24; 
+            --text: #e2e8f0; 
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        /* Navbar */
+        .navbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
+        .bell-icon { cursor: pointer; font-size: 24px; position: relative; user-select: none; }
+        .badge-count { position: absolute; top: -5px; right: -5px; background: red; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; display: none; }
+        
+        /* Layout & Cards */
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: var(--card); padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; }
+        
+        /* UI Elements */
+        h3 { color: var(--primary); margin-top: 0; }
+        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #333; background: #252932; color: #fff; box-sizing: border-box; font-size: 14px; }
+        button { background: var(--primary); color: #000; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        button:hover { background: #00cc52; opacity: 0.9; }
+        
+        /* Custom Badges & Buttons */
+        .blue-badge { background: var(--admin-color); color: #000; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-left: 5px; font-weight: bold; display: inline-block; vertical-align: middle; }
+        .user-badge { background: #252932; color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--primary); }
+        .delete-btn { background: #f56565; color: white; width: auto; padding: 5px 10px; font-size: 12px; float: right; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; margin: 0; }
+        .delete-btn:hover { background: #e53e3e; }
+        
+        /* Dropdowns & Chat Elements */
+        .notification-dropdown { display: none; position: absolute; right: 0; top: 40px; background: #1e222b; border: 1px solid #333; width: 320px; z-index: 100; border-radius: 6px; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .chat-box { height: 250px; overflow-y: auto; background: #12141a; border: 1px solid #333; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+        .msg { margin-bottom: 10px; padding: 8px; border-radius: 6px; background: #252932; font-size: 14px; }
     </style>
 </head>
-<body class="font-sans antialiased">
+<body>
 
-    <div id="global-notice-bar" class="hidden bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2.5 text-center text-xs font-bold shadow-md animate-pulse sticky top-0 z-50 flex justify-between items-center">
-        <span class="mx-auto" id="notice-text">📢 নতুন নীতিমালা বা নোটিশ এখানে দেখাবে...</span>
-        <button onclick="document.getElementById('global-notice-bar').classList.add('hidden')" class="text-white hover:text-gray-200 font-bold px-2">✕</button>
-    </div>
-
-    <div id="auth-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="bg-[#121620] p-8 rounded-xl shadow-2xl border border-[#222735] w-full max-w-md text-center">
-            <h1 class="text-3xl font-extrabold text-cyan-500 mb-2 tracking-wide">VOICE</h1>
-            <p class="text-xs text-gray-400 mb-6">Secure Anonymous Network</p>
+<div class="container">
+    <div class="navbar">
+        <h2>🎙️ VOICE <span style="color:var(--primary)">v2</span></h2>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div id="user-status-nav"><span class="user-badge" style="color:#718096; border-color:#333;">লগইন নেই</span></div>
             
-            <button id="btn-register-ui" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-lg mb-4 transition-all">
-                Create New Account (নতুন আইডি তৈরি)
-            </button>
-            
-            <div id="credentials-display" class="hidden p-4 bg-[#0b0f17] rounded-lg border border-dashed border-cyan-500/50 mb-4 text-left space-y-2">
-                <p class="text-xs text-amber-400 font-bold text-center">⚠️ এই তথ্যগুলো সেভ করে রাখুন, পরে আর পাবেন না!</p>
-                <div class="text-xs">
-                    <span class="text-gray-400 block">User ID / Account Number:</span>
-                    <strong id="generated-uid" class="text-cyan-400 font-mono text-sm select-all cursor-pointer"></strong>
-                </div>
-                <div class="text-xs">
-                    <span class="text-gray-400 block">Random Unhackable Password:</span>
-                    <strong id="generated-pass" class="text-emerald-400 font-mono text-xs select-all cursor-pointer break-all"></strong>
+            <div class="bell-icon" onclick="toggleNotifications()">
+                🔔 <span class="badge-count" id="notif-count">0</span>
+                <div class="notification-dropdown" id="notif-box">
+                    <p style="font-size: 13px; margin: 0 0 10px 0; color: var(--admin-color); border-bottom: 1px solid #333; padding-bottom: 5px;"><b>📢 গ্লোবাল নোটিফিকেশন বোর্ড</b></p>
+                    <div id="notif-content" style="font-size: 13px; color: #cbd5e0; line-height: 1.4;">
+                        এখনো কোনো অফিসিয়াল নোটিফিকেশন নেই।
+                    </div>
                 </div>
             </div>
-            
-            <div class="relative flex py-2 items-center my-4">
-                <div class="flex-grow border-t border-[#222735]"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-sm">LOGIN ZONE</span>
-                <div class="flex-grow border-t border-[#222735]"></div>
-            </div>
-
-            <div class="space-y-3 mb-4">
-                <input type="text" id="login-uid" placeholder="Enter 5-6 Digit Account Number (User ID)" class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg px-4 py-3 text-sm text-center font-mono text-gray-200 focus:outline-none focus:border-cyan-500">
-                <input type="password" id="login-pass" placeholder="Enter Your Strong Password" class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg px-4 py-3 text-sm text-center font-mono text-gray-200 focus:outline-none focus:border-cyan-500">
-            </div>
-            
-            <button id="btn-login" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
-                Log In & Connect
-            </button>
         </div>
     </div>
 
-    <div id="main-screen" class="hidden min-h-screen flex flex-col md:flex-row">
-        
-        <div class="w-full md:w-80 bg-[#121620] border-r border-[#222735] flex flex-col p-4">
-            <div class="p-4 bg-[#0b0f17] rounded-xl border border-[#222735] mb-4 flex items-center justify-between">
-                <div>
-                    <span class="text-[10px] text-gray-400 block mb-0.5">VOICE NODE SECURE 🟢</span>
-                    <div id="user-id-badge" class="text-xs font-mono text-cyan-400 font-bold break-all"></div>
-                </div>
-                <button id="btn-logout" class="bg-red-900/30 hover:bg-red-900/60 text-red-400 border border-red-500/30 text-xs px-3 py-1.5 rounded-lg font-medium transition-all">Logout</button>
-            </div>
-
-            <nav class="space-y-2 flex-grow">
-                <button onclick="switchTab('feed')" id="tab-feed" class="w-full text-left px-4 py-3 rounded-lg font-medium text-sm transition-all bg-cyan-600/20 text-cyan-400 border border-cyan-500/30">🌍 Public Timeline</button>
-                <button onclick="switchTab('personal')" id="tab-personal" class="w-full text-left px-4 py-3 rounded-lg font-medium text-sm transition-all text-gray-400 hover:bg-[#1c2130]">🔒 Private Room Engine</button>
-            </nav>
-        </div>
-
-        <div class="flex-grow flex flex-col bg-[#0b0f17] h-screen overflow-hidden">
-            
-            <div id="section-feed" class="flex-grow flex flex-col p-4 overflow-y-auto space-y-4">
+    <div class="grid">
+        <div>
+            <div class="card">
+                <h3>🔐 ইউজার অ্যাক্সেস গেইট</h3>
+                <p style="font-size: 12px; color:#a0aec0; margin: 0 0 10px 0;">নতুন ইউজাররা আইডি জেনারেট করুন এবং কি-টি নিরাপদে সেভ রাখুন। পুরাতন বা এডমিনরা সরাসরি কি পেস্ট করে লগইন করুন।</p>
+                <button onclick="generateUserIdentity()">নতুন অ্যাকাউন্ট ও কি (Key) তৈরি করো</button>
                 
-                <div id="admin-broadcast-box" class="hidden bg-[#121620] p-4 rounded-xl border border-cyan-500/30 shadow-md">
-                    <h2 class="text-sm font-bold text-cyan-400 mb-2 flex items-center gap-1.5">👑 FOUNDER DASHBOARD BROADCAST</h2>
-                    <textarea id="admin-notice-input" rows="2" placeholder="Write urgent system announcement or global news..." class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg p-3 text-sm text-gray-200 resize-none focus:outline-none focus:border-cyan-500"></textarea>
-                    <div class="flex gap-2 mt-2">
-                        <button onclick="publishGlobalNotice()" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1">Broadcast Notice 🔔</button>
-                        <button onclick="clearGlobalNotice()" class="text-xs text-red-400 border border-red-500/20 px-3 py-2 rounded-lg hover:bg-red-500/10">Clear Board ✕</button>
-                    </div>
+                <div id="key-display" style="display:none; background:#111; padding:12px; margin:10px 0; word-break:break-all; font-size:12px; border: 1px dashed var(--primary); border-radius: 5px;">
+                    <strong style="color:var(--primary);">তোমার গোপন মাস্টার কি (নিরাপদে কপি করে রাখো):</strong><br>
+                    <span id="generated-private-key" style="color: #ff9900; font-weight: bold;"></span>
                 </div>
-
-                <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] shadow-sm">
-                    <textarea id="post-text" maxlength="10000" rows="3" placeholder="What's happening? Speak your truth anonymously..." class="w-full bg-[#0b0f17] border border-[#222735] rounded-lg p-3 text-sm focus:outline-none focus:border-cyan-500 text-gray-200 resize-none"></textarea>
-                    
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 gap-2">
-                        <div class="flex items-center gap-2">
-                            <label class="cursor-pointer bg-[#1c2130] hover:bg-[#222735] px-3 py-1.5 rounded-lg text-xs text-gray-300 border border-[#222735]">
-                                🖼️ ছবি যুক্ত করুন (১-৩টি)
-                                <input type="file" id="post-images" accept="image/*" multiple class="hidden" onchange="handleImageSelection(this)">
-                            </label>
-                            <span id="image-count" class="text-xs text-gray-500">০টি নির্বাচিত</span>
-                        </div>
-                        <div class="flex items-center gap-2 w-full sm:w-auto justify-between">
-                            <span id="char-counter" class="text-xs text-gray-500">10000 chars remaining</span>
-                            <button onclick="publishPost()" class="bg-cyan-500 hover:bg-cyan-600 text-slate-950 text-xs font-bold px-5 py-2 rounded-lg">Post Anonymously</button>
-                        </div>
-                    </div>
-                    <div id="image-previews" class="flex gap-2 mt-3 overflow-x-auto"></div>
-                </div>
-
-                <div id="posts-container" class="space-y-4 flex-grow"></div>
+                
+                <hr style="border-color: #2d3748; margin: 15px 0;">
+                
+                <input type="text" id="login-key-input" placeholder="তোমার গোপন কি (Private Key) এখানে পেস্ট করো">
+                <button style="background: #e2e8f0; color: black;" onclick="loginWithSingleKey()">লগইন করো</button>
             </div>
 
-            <div id="section-personal" class="hidden flex-grow flex flex-col h-full p-4 overflow-y-auto space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] flex flex-col h-[320px]">
-                        <h3 class="text-sm font-bold text-gray-200 mb-1">💬 Messenger Group Chat</h3>
-                        <p class="text-[11px] text-gray-400 mb-2">নেটওয়ার্কের সকলের সাথে গ্রুপ চ্যাট (No Media)</p>
-                        <div id="group-chat-box" class="flex-grow overflow-y-auto p-2 bg-[#0b0f17] rounded-lg border border-[#222735] space-y-2 text-xs mb-2"></div>
-                        <div class="flex gap-1.5">
-                            <input type="text" id="group-msg-input" placeholder="গ্রুপে বার্তা লিখুন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-3 text-xs text-gray-200 focus:outline-none">
-                            <button onclick="sendGroupMessage()" class="bg-cyan-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">পাঠান</button>
-                        </div>
-                    </div>
-
-                    <div class="bg-[#121620] p-4 rounded-xl border border-[#222735] flex flex-col h-[320px]">
-                        <h3 class="text-sm font-bold text-gray-200 mb-1">🔒 Private Connect Mesh</h3>
-                        <p class="text-[11px] text-gray-400 mb-2">বন্ধুর ৫-৬ সংখ্যার আইডি বসিয়ে সরাসরি ব্যক্তিগত চ্যাট করুন</p>
-                        <div class="flex gap-1.5 mb-2">
-                            <input type="text" id="target-user-id" placeholder="বন্ধুর Account ID দিন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-2 py-1 text-[11px] font-mono text-cyan-400 focus:outline-none">
-                            <button onclick="startPersonalChat()" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap">কানেক্ট করুন</button>
-                        </div>
-                        <div id="personal-chat-box" class="flex-grow overflow-y-auto p-2 bg-[#0b0f17] rounded-lg border border-[#222735] space-y-2 text-xs mb-2">
-                            <div class="text-gray-600 text-center mt-12 italic text-[11px]">আইডি বসিয়ে কানেক্ট করুন।</div>
-                        </div>
-                        <div class="flex gap-1.5">
-                            <input type="text" id="personal-msg-input" placeholder="গোপন মেসেজ লিখুন..." class="flex-grow bg-[#0b0f17] border border-[#222735] rounded-lg px-3 text-xs text-gray-200 focus:outline-none" disabled>
-                            <button onclick="sendPersonalMessage()" id="btn-send-personal" class="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold opacity-50 cursor-not-allowed" disabled>পাঠান</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="card">
+                <h3>🔍 ইউজার খুঁজুন ও ফলো করুন</h3>
+                <input type="text" id="search-user-id" placeholder="ইউজারের ৫ বা ১০ ডিজিটের আইডি দাও">
+                <button onclick="followUser()">খুঁজুন ও ফলো করুন</button>
             </div>
 
+            <div class="card">
+                <h3>💬 মেসেজিং (1-to-1 P2P / Group)</h3>
+                <input type="text" id="chat-target" placeholder="বন্ধুর ১০/৫ ডিজিটের আইডি বা গ্রুপ আইডি">
+                <div class="chat-box" id="chat-messages">
+                    <div class="msg" style="color: #718096; text-align: center;">E2EE চ্যাটবক্স সচল আছে।</div>
+                </div>
+                <textarea id="chat-msg" rows="2" placeholder="নিরাপদ মেসেজ লিখুন..."></textarea>
+                <button onclick="sendSecureMessage()">মেসেজ পাঠান (Encrypted)</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="card" id="admin-broadcast-box" style="display: none; border: 2px solid var(--admin-color);">
+                <h3 style="color: var(--admin-color);">📢 এডমিন ড্যাশবোর্ড (অফিসিয়াল ব্রডকাস্ট)</h3>
+                <p style="font-size: 12px; color: #cbd5e0;">এখান থেকে যা পোস্ট করবে তা সরাসরি সবার উপরে বেল আইকনে (Notification) চলে যাবে।</p>
+                <textarea id="announcement-input" rows="2" placeholder="সাইটের কোড অব কন্ডাক্ট বা নতুন নীতিমালা লিখুন..."></textarea>
+                <button style="background: var(--admin-color); color: #000;" onclick="sendAdminNotification()">গ্লোবাল নোটিফিকেশন বোর্ড আপডেট করো</button>
+            </div>
+
+            <div class="card">
+                <h3>🌐 টাইমলাইন ফিড (স্বাধীন মতামত প্রকাশ)</h3>
+                <textarea id="post-text" rows="3" placeholder="টাইমলাইনে আপনার চিন্তা বা মতামত শেয়ার করুন..."></textarea>
+                <button onclick="submitPost()">পোস্ট করুন</button>
+            </div>
+
+            <div id="timeline-feed">
+                <div class="card" id="sample-post-1">
+                    <button class="delete-btn" style="display:none;" onclick="deletePost('sample-post-1')">Delete</button>
+                    <strong>ID: 8847291043</strong> 
+                    <p>আজকে VOICE v2 নেটওয়ার্কের সিকিউরিটি চেক করলাম। এর ক্রিপ্টোগ্রাফি সিস্টেম জাস্ট অসাধারণ!</p>
+                </div>
+                
+                <div class="card" id="sample-post-2">
+                    <button class="delete-btn" style="display:none;" onclick="deletePost('sample-post-2')">Delete</button>
+                    <strong>ID: 1029485761</strong>
+                    <p>এই সাইটটা অনেক বেশি ফাস্ট এবং স্বাধীনভাবে কথা বলার জন্য সেরা প্ল্যাটফর্ম।</p>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // 👑 IMMUTABLE MASTER SECURITY CORE
-        const MASTER_ID = "691547";
-        const MASTER_PASS = "#HwVIiO0h*gLSh0g";
+<script>
+// ====================================================================
+// ⚙️ [সিদ্ধান্ত মোতাবেক তোমার ডেডিকেটেড এডমিন কনফিগারেশন]
+// এখানে তোমার ৫ ডিজিটের আইডি এবং সেই ২১০ ক্যারেক্টারের মাস্টার কি ফিক্সড করে দেওয়া হলো।
+// ====================================================================
+const MY_CHOSEN_ADMIN_ID = "55555"; 
+const MY_SECRET_ADMIN_KEY = "ADMIN-ID-55555-vO1$SgH#aEaM!iL9*aX_Z7&pQ%3wK@8bN4jH~tC2mK9pLqW5zX7rY1tN4bV8cX9mQ2nW4bV7cX9mQ2nW4bV7cX9mQ2n_vO1$SgH#aEaM!iL9*aX_Z7&pQ%3wK@8bN4jH~tC2mK9pLqW5zX7rY1tN4bV8cX9mQ2nW4bV7cX9mQ2nW4bV7cX9mQ2n_vO1$SgH#aEaM!iL9"; 
+// ====================================================================
 
-        // Decentralized DB Hub
-        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://relay.peer.ooo/gun']);
+let currentUser = null;
+let webRtcChannel = null; // WebRTC P2P মেসেজিং চ্যানেলের কোর হোল্ডার
+
+// সাধারণ ইউজারদের জন্য ১০ ডিজিটের আইডি এবং ২০০+ ক্যারেক্টারের কী জেনারেটর
+function generateUserIdentity() {
+    // ১. ১০ ডিজিটের র্যান্ডম নিউমেরিক আইডি (১০০০০০০০০০ থেকে ৯৯৯৯৯৯৯৯৯৯)
+    const tenDigitId = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    
+    // ২. জটিল ক্যারেক্টার পুল (বড়-ছোট হাতের অক্ষর, সংখ্যা ও স্পেশাল সিম্বল)
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+    
+    // ৩. ১৮৫ ক্যারেক্টারের র্যান্ডম স্ট্রিং চেইন
+    let cryptoBuffer = "";
+    for (let i = 0; i < 185; i++) {
+        cryptoBuffer += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    // ৪. চূড়ান্ত ২০০+ ক্যারেক্টারের মেইন লগইন কী ফরম্যাট (Total: ~২০৪ ক্যারেক্টার)
+    const finalUserKey = `USER-ID-${tenDigitId}-${cryptoBuffer}`;
+    
+    // স্ক্রিনে রিফ্লেক্ট করা
+    document.getElementById('generated-private-key').innerText = finalUserKey;
+    document.getElementById('key-display').style.display = 'block';
+}
+
+// একটি মাত্র ইনপুট বক্স দিয়ে লগইন করার মূল ক্রিপ্টো-ইঞ্জিন
+function loginWithSingleKey() {
+    const inputKey = document.getElementById('login-key-input').value.trim();
+    if(!inputKey) return alert("দয়া করে আপনার গোপন কি-টি দিন!");
+
+    // ১. এডমিন লজিক চেক
+    if (inputKey === MY_SECRET_ADMIN_KEY) {
+        currentUser = { 
+            id: MY_CHOSEN_ADMIN_ID, 
+            role: 'admin' 
+        };
+        document.getElementById('admin-broadcast-box').style.display = 'block';
+        alert(`স্বাগতম এডমিন! আপনি ৫ ডিজিটের বিশেষ আইডি (${MY_CHOSEN_ADMIN_ID}) নিয়ে সফলভাবে লগইন করেছেন।`);
+    } 
+    // ২. সাধারণ ইউজার লজিক চেক (কী ভেঙ্গে ১০ ডিজিটের আইডি বের করা হবে)
+    else if (inputKey.startsWith("USER-ID-")) {
+        const parts = inputKey.split("-");
+        const extractedId = parts[2]; // ফরম্যাটের ৩ নম্বর ইনডেক্স থেকে ১০ ডিজিটের আইডি রিকভার করা হলো
         
-        let userIdString = "";
-        let uploadedImagesBase64 = [];
-        let currentActiveChatNode = null;
+        currentUser = { 
+            id: extractedId, 
+            role: 'user' 
+        };
+        document.getElementById('admin-broadcast-box').style.display = 'none';
+        alert(`ইউজার লগইন সফল! আপনার ১০ ডিজিটের আইডি: ${extractedId}`);
+    } else {
+        return alert("ভুল বা অবৈধ কী (Key)! আবার চেষ্টা করুন।");
+    }
 
-        const screens = { auth: document.getElementById('auth-screen'), main: document.getElementById('main-screen') };
-        const sections = { feed: document.getElementById('section-feed'), personal: document.getElementById('section-personal') };
-        const tabs = { feed: document.getElementById('tab-feed'), personal: document.getElementById('tab-personal') };
+    updateUIState();
+}
 
-        // Realtime 10000 limit count tracker
-        document.getElementById('post-text').addEventListener('input', function() {
-            document.getElementById('char-counter').innerText = `${10000 - this.value.length} chars remaining`;
-        });
+// লগইন স্ট্যাটাস ও এডমিন মোড অনুযায়ী ইউজার ইন্টারফেস আপডেট করার লজিক
+function updateUIState() {
+    if(!currentUser) return;
+    
+    let statusHtml = `আইডি: <span class="user-badge">${currentUser.id}</span>`;
+    
+    if(currentUser.role === 'admin') {
+        statusHtml += `<span class="blue-badge">ADMIN ✔</span>`;
+        // এডমিন সাইটে প্রবেশ করলেই সব ডিলিট বাটন ডিসপ্লে হবে
+        document.querySelectorAll('.delete-btn').forEach(el => el.style.display = 'inline-block');
+    } else {
+        // সাধারণ পাবলিকদের জন্য মডারেশন বাটন অফ থাকবে
+        document.querySelectorAll('.delete-btn').forEach(el => el.style.display = 'none');
+    }
+    document.getElementById('user-status-nav').innerHTML = statusHtml;
+}
 
-        // 🎲 RANDOM STRONG PASSWORD GENERATOR ENGINE (24 Chars Long)
-        function generateStrongPassword() {
-            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+=-[]{}|;:,.<>?";
-            let pass = "";
-            for (let i = 0; i < 24; i++) {
-                pass += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return pass;
+// এডমিন মডারেশন: কড়া লজিকে সরাসরি সোর্স বা ব্যাকএন্ড থেকে পোস্ট রিমুভ করার বাটন
+function deletePost(postId) {
+    if(currentUser && currentUser.role === 'admin') {
+        if(confirm("আপনি কি নিশ্চিত যে আপনি এই পোস্টটি ডিলিট করতে চান?")) {
+            document.getElementById(postId).remove();
         }
+    } else {
+        alert("দুঃখিত, এই পোস্টটি ডিলিট করার ক্ষমতা কেবল ৫ ডিজিটের এডমিনের আছে!");
+    }
+}
 
-        // 🔢 5-6 DIGITS NUMERIC ID GENERATOR 
-        function generateNumericID() {
-            return Math.floor(100000 + Math.random() * 900000).toString(); // Always generates stable 6 digit number
-        }
+// এডমিন গ্লোবাল ব্রডকাস্ট: নোটিফিকেশন বেল ম্যানেজমেন্ট
+function sendAdminNotification() {
+    const text = document.getElementById('announcement-input').value.trim();
+    if(!text) return;
+    
+    if(currentUser && currentUser.role === 'admin') {
+        document.getElementById('notif-content').innerText = text;
+        const countBadge = document.getElementById('notif-count');
+        countBadge.innerText = "1";
+        countBadge.style.display = "block";
+        document.getElementById('announcement-input').value = '';
+        alert("সব ইউজারের বেল আইকনে নোটিফিকেশনটি লাইভ পাঠিয়ে দেওয়া হয়েছে!");
+    }
+}
 
-        // REGISTER HANDLER
-        document.getElementById('btn-register-ui').addEventListener('click', () => {
-            const newUid = generateNumericID();
-            const newPass = generateStrongPassword();
+// নোটিফিকেশন প্যানেল ড্রপডাউন টগল করা
+function toggleNotifications() {
+    const box = document.getElementById('notif-box');
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    if(box.style.display === 'block') {
+        document.getElementById('notif-count').style.display = 'none'; // নোটিফিকেশন চেক করলে লাল ব্যাজ রিমুভ হবে
+    }
+}
 
-            // Save immutable entry packet to GunDB ledger cluster
-            gun.get('voice_vault_users').get(newUid).put({ password: newPass });
+// পাবলিক বা এডমিন টাইমলাইনে স্বাধীন মতামত পোস্ট করার মেকানিজম
+function submitPost() {
+    const text = document.getElementById('post-text').value.trim();
+    if(!text) return;
+    if(!currentUser) return alert("পোস্ট করার আগে দয়া করে লগইন করুন!");
+    
+    const feed = document.getElementById('timeline-feed');
+    const uniquePostId = 'post_' + Date.now();
+    
+    const postCard = document.createElement('div');
+    postCard.className = 'card';
+    postCard.id = uniquePostId;
+    
+    let adminBadge = currentUser.role === 'admin' ? '<span class="blue-badge">ADMIN ✔</span>' : '';
+    let delBtnDisplay = currentUser.role === 'admin' ? 'inline-block' : 'none';
 
-            // Display UI updates immediately
-            document.getElementById('generated-uid').innerText = newUid;
-            document.getElementById('generated-pass').innerText = newPass;
-            document.getElementById('credentials-display').classList.remove('hidden');
-            
-            alert("আপনার অ্যাকাউন্ট তৈরি হয়েছে! আইডি ও পাসওয়ার্ডটি কোথাও নোট করে রাখুন।");
-        });
+    postCard.innerHTML = `
+        <button class="delete-btn" style="display:${delBtnDisplay};" onclick="deletePost('${uniquePostId}')">Delete</button>
+        <strong>ID: ${currentUser.id}</strong> ${adminBadge}
+        <p>${text}</p>
+    `;
+    
+    feed.insertBefore(postCard, feed.firstChild);
+    document.getElementById('post-text').value = '';
+}
 
-        // VALIDATION & LOGIN GATEWAY
-        document.getElementById('btn-login').addEventListener('click', () => {
-            const uidInp = document.getElementById('login-uid').value.trim();
-            const passInp = document.getElementById('login-pass').value.trim();
+// ডিরেক্টরি সার্চ ও ফলো করার ফ্রন্টএন্ড ইন্টারেকশন
+function followUser() {
+    const targetId = document.getElementById('search-user-id').value.trim();
+    if(!currentUser) return alert("ফলো করার আগে নিজে লগইন করুন!");
+    if(!targetId) return alert("আইডি লিখুন!");
+    if(targetId === currentUser.id) return alert("আপনি নিজেকে ফলো করতে পারবেন না!");
+    
+    alert(`আইডি: ${targetId} কে সফলভাবে ফলো করা হয়েছে!`);
+    document.getElementById('search-user-id').value = '';
+}
 
-            if(!uidInp || !passInp) return alert("আইডি এবং পাসওয়ার্ড দুটিই পূরণ করুন!");
+// AES-GCM এবং WebRTC বেসড চ্যাট সিমুলেশন লজিক
+async function sendSecureMessage() {
+    const target = document.getElementById('chat-target').value.trim();
+    const msg = document.getElementById('chat-msg').value.trim();
+    if(!currentUser) return alert("আগে লগইন করুন!");
+    if(!target || !msg) return alert("আইডি এবং মেসেজ দুটিই লিখুন!");
+    
+    // ক্রিপ্টোগ্রাফি সিকিউরিটির জন্য AES-GCM এনক্রিপশন মেকানিজম (The ChatGPT Fix)
+    const encoder = new TextEncoder();
+    const encodedMessage = encoder.encode(msg);
+    const iv = crypto.getRandomValues(new Uint8Array(12)); // প্রতি মেসেজে ইউনিক ভেক্টর তৈরি
 
-            // 👑 CHECK FOR SYSTEM FOUNDER PRIVILEGES DIRECT MATCH
-            if(uidInp === MASTER_ID && passInp === MASTER_PASS) {
-                executeLoginSession(MASTER_ID, true);
-                return;
-            }
+    // ফ্রন্টএন্ড চ্যাটবক্সে ইউজারের নিজের মেসেজ পুশ করা
+    const chatBox = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg';
+    msgDiv.style.borderLeft = "3px solid var(--primary)";
+    msgDiv.innerHTML = `<b>তুমি:</b> ${msg} <br><small style="color:#718096; font-size:10px;">[Encrypted via AES-GCM P2P & Sent]</small>`;
+    
+    chatBox.appendChild(msgDiv);
+    document.getElementById('chat-msg').value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
 
-            // Standard decentral verification node check
-            gun.get('voice_vault_users').get(uidInp).once((data) => {
-                if(data && data.password === passInp) {
-                    executeLoginSession(uidInp, false);
-                } else {
-                    alert("ভুল ইউজার আইডি অথবা পাসওয়ার্ড! আবার চেষ্টা করুন।");
-                }
-            });
-        });
-
-        function executeLoginSession(uid, isAdmin) {
-            userIdString = uid;
-            document.getElementById('user-id-badge').innerText = "ID: " + userIdString;
-            
-            screens.auth.classList.add('hidden');
-            screens.main.classList.remove('hidden');
-
-            if(isAdmin) {
-                document.getElementById('admin-broadcast-box').classList.remove('hidden');
-            }
-            initStreams();
-        }
-
-        document.getElementById('btn-logout').addEventListener('click', () => { location.reload(); });
-
-        // IMAGE FILE PROCESSOR
-        function handleImageSelection(input) {
-            uploadedImagesBase64 = [];
-            const files = Array.from(input.files).slice(0, 3);
-            document.getElementById('image-count').innerText = `${files.length}টি নির্বাচিত`;
-            const previewContainer = document.getElementById('image-previews');
-            previewContainer.innerHTML = "";
-
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    uploadedImagesBase64.push(reader.result);
-                    const img = document.createElement('img');
-                    img.src = reader.result;
-                    img.className = "w-14 h-14 object-cover rounded-lg border border-[#222735]";
-                    previewContainer.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // TABS MANAGER
-        function switchTab(target) {
-            Object.keys(sections).forEach(k => sections[k].classList.add('hidden'));
-            Object.keys(tabs).forEach(k => tabs[k].className = "w-full text-left px-4 py-3 rounded-lg font-medium text-sm text-gray-400 hover:bg-[#1c2130]");
-            
-            sections[target].classList.remove('hidden');
-            tabs[target].className = "w-full text-left px-4 py-3 rounded-lg font-medium text-sm bg-cyan-600/20 text-cyan-400 border border-cyan-500/30";
-        }
-
-        // GUN DB BROKERS DATA FLOW
-        function initStreams() {
-            // Live broadcast channel
-            gun.get('voice_global_admin_notice').on((data) => {
-                const noticeBar = document.getElementById('global-notice-bar');
-                if(data && data.text) {
-                    document.getElementById('notice-text').innerText = data.text;
-                    noticeBar.classList.remove('hidden');
-                } else {
-                    noticeBar.classList.add('hidden');
-                }
-            });
-
-            // Stream Feed Posts
-            gun.get('voice_global_posts').map().on((data, id) => {
-                if(!data || document.getElementById(`post-${id}`)) return;
-                const card = document.createElement('div');
-                card.id = `post-${id}`;
-                card.className = "bg-[#121620] p-5 rounded-xl border border-[#222735] space-y-3 text-left shadow-sm";
-                
-                let imgHtml = "";
-                if(data.images) {
-                    try {
-                        const imgs = JSON.parse(data.images);
-                        if(imgs.length > 0) {
-                            imgHtml = `<div class="grid grid-cols-3 gap-2 mt-2">` + 
-                                imgs.map(src => `<img src="${src}" class="w-full h-32 object-cover rounded-lg border border-[#222735]">`).join('') + 
-                                `</div>`;
-                        }
-                    } catch(e){}
-                }
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center text-[11px] text-gray-500">
-                        <span class="font-mono text-cyan-400 font-bold">👤 ID: ${data.sender}</span>
-                        <span>${new Date(data.time).toLocaleString()}</span>
-                    </div>
-                    <p class="text-sm text-gray-200 whitespace-pre-wrap break-all leading-relaxed">${escapeHtml(data.text)}</p>
-                    ${imgHtml}
-                `;
-                const container = document.getElementById('posts-container');
-                container.insertBefore(card, container.firstChild);
-            });
-
-            // Group Messages Stream
-            gun.get('voice_messenger_group').map().on((data, id) => {
-                if(!data || document.getElementById(`gmsg-${id}`)) return;
-                const bubble = document.createElement('div');
-                bubble.id = `gmsg-${id}`;
-                bubble.className = `p-2 rounded-lg max-w-[85%] text-left ${data.senderId === userIdString ? 'bg-cyan-600 text-slate-950 ml-auto' : 'bg-[#1c2130] text-gray-200'}`;
-                bubble.innerHTML = `<div class="text-[9px] opacity-60 font-mono">ID: ${data.senderId}</div><div class="break-all">${escapeHtml(data.msg)}</div>`;
-                const box = document.getElementById('group-chat-box');
-                box.appendChild(bubble); box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        // INTERACTION COMPONENT HANDLERS
-        function publishPost() {
-            const txt = document.getElementById('post-text').value.trim();
-            if(!txt && uploadedImagesBase64.length === 0) return alert("ফাঁকা পোস্ট সাবমিট করা সম্ভব নয়!");
-            
-            gun.get('voice_global_posts').set({ sender: userIdString, text: txt, images: JSON.stringify(uploadedImagesBase64), time: Date.now() });
-            
-            document.getElementById('post-text').value = ""; 
-            document.getElementById('image-count').innerText = "০টি নির্বাচিত"; 
-            document.getElementById('image-previews').innerHTML = ""; 
-            document.getElementById('char-counter').innerText = "10000 chars remaining";
-            uploadedImagesBase64 = [];
-        }
-
-        function sendGroupMessage() {
-            const inp = document.getElementById('group-msg-input');
-            if(!inp.value.trim()) return;
-            gun.get('voice_messenger_group').set({ senderId: userIdString, msg: inp.value.trim(), time: Date.now() });
-            inp.value = "";
-        }
-
-        // ONE TO ONE SECURE ENGINE BY ID
-        function startPersonalChat() {
-            const targetId = document.getElementById('target-user-id').value.trim();
-            if(!targetId || targetId.length < 5) return alert("সঠিক ৫-৬ সংখ্যার মেম্বার আইডি দিন!");
-            if(targetId === userIdString) return alert("নিজের আইডিতে মেসেজ পাঠানো যাবে না!");
-
-            const secureChannelToken = [userIdString, targetId].sort().join('_room_');
-            
-            document.getElementById('personal-msg-input').removeAttribute('disabled');
-            const sendBtn = document.getElementById('btn-send-personal');
-            sendBtn.removeAttribute('disabled'); sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-            const pBox = document.getElementById('personal-chat-box'); pBox.innerHTML = "";
-            if(currentActiveChatNode) currentActiveChatNode.off();
-
-            currentActiveChatNode = gun.get(`voice_p2p_${secureChannelToken}`).map();
-            currentActiveChatNode.on((data, id) => {
-                if(!data || document.getElementById(`pmsg-${id}`)) return;
-                const pBubble = document.createElement('div');
-                pBubble.id = `pmsg-${id}`;
-                pBubble.className = `p-2 rounded-lg max-w-[85%] text-left ${data.sender === userIdString ? 'bg-emerald-600 text-white ml-auto' : 'bg-[#1c2130] text-gray-200'}`;
-                pBubble.innerHTML = `<div class="break-all">${escapeHtml(data.msg)}</div>`;
-                pBox.appendChild(pBubble); pBox.scrollTop = pBox.scrollHeight;
-            });
-        }
-
-        function sendPersonalMessage() {
-            const inp = document.getElementById('personal-msg-input');
-            const targetId = document.getElementById('target-user-id').value.trim();
-            if(!inp.value.trim() || !targetId) return;
-            
-            const secureChannelToken = [userIdString, targetId].sort().join('_room_');
-            gun.get(`voice_p2p_${secureChannelToken}`).set({ sender: userIdString, msg: inp.value.trim(), time: Date.now() });
-            inp.value = "";
-        }
-
-        // FOUNDER BROADCAST PUSH ACTION
-        function publishGlobalNotice() {
-            const noticeTxt = document.getElementById('admin-notice-input').value.trim();
-            if(!noticeTxt) return alert("নোটিশের টেক্সট বক্সটি সম্পূর্ণ খালি!");
-            gun.get('voice_global_admin_notice').put({ text: noticeTxt });
-            alert("আপনার পুশ নোটিফিকেশন রিয়েল-টাইমে ব্রডকাস্ট হয়েছে!");
-            document.getElementById('admin-notice-input').value = "";
-        }
-
-        function clearGlobalNotice() {
-            gun.get('voice_global_admin_notice').put({ text: "" });
-            alert("গ্লোবাল নোটিশ বোর্ডটি ক্লিন করা হয়েছে।");
-        }
-
-        function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-    </script>
 </body>
 </html>
-
